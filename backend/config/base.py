@@ -17,6 +17,12 @@ class Settings(BaseSettings):
     # Groq AI Integration
     GROQ_API_KEY: str = "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"
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_MODEL_CASCADE: list = [
+        "llama-3.3-70b-versatile",
+        "llama-3.1-8b-instant",
+        "openai/gpt-oss-120b",
+        "openai/gpt-oss-20b"
+    ]
 
     # Limits
     MAX_UPLOAD_SIZE: int = 104857600
