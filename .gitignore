@@ -1,0 +1,54 @@
+# ==========================================
+# 1. Environment Variables & Secrets (CRITICAL)
+# ==========================================
+.env
+.env.*
+!.env.example
+backend/.env
+backend/*/.env
+*.pem
+*.key
+*.crt
+
+# ==========================================
+# 2. Virtual Environments & Dependencies
+# ==========================================
+.venv/
+venv/
+ENV/
+env/
+node_modules/
+.npm/
+
+# ==========================================
+# 3. Python Caches & Build Files
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.build/
+dist/
+build/
+
+# ==========================================
+# 4. Hawk Engine Temporary & Generated Output
+# ==========================================
+backend/temp/
+backend/uploads/
+backend/generated_reports/*.pdf
+backend/generated_reports/*.json
+backend/generated_reports/*.csv
+
+# ==========================================
+# 5. IDE & System Files
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
