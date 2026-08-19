@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, Sparkles, AlertCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -102,7 +102,7 @@ export const HawkAIChat = ({ scanData, loading, repoPath, error, currentPage = '
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] font-sans">
+    <div className="fixed bottom-16 right-6 z-[9999] font-sans">
       {/* Floating Toggle Button */}
       {!isOpen && (
         <button
@@ -192,19 +192,19 @@ export const HawkAIChat = ({ scanData, loading, repoPath, error, currentPage = '
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      h3: ({ node, ...props }) => (
+                      h3: ({ ...props }) => (
                         <h3 className={`text-sm font-bold mt-3 mb-1 border-b pb-1 flex items-center gap-1 ${
                           isDark 
                             ? "text-secondary border-secondary/40" 
                             : "text-slate-900 border-slate-300"
                         }`} {...props} />
                       ),
-                      p: ({ node, ...props }) => <p className={`mb-2 last:mb-0 leading-normal ${isDark ? "text-slate-100" : "text-slate-900"}`} {...props} />,
-                      ul: ({ node, ...props }) => <ul className={`list-disc list-inside space-y-1 my-2 ${isDark ? "text-slate-100" : "text-slate-800"}`} {...props} />,
-                      ol: ({ node, ...props }) => <ol className={`list-decimal list-inside space-y-1 my-2 ${isDark ? "text-slate-100" : "text-slate-800"}`} {...props} />,
-                      li: ({ node, ...props }) => <li className="my-0.5 leading-normal" {...props} />,
-                      strong: ({ node, ...props }) => <strong className={`font-semibold ${isDark ? "text-secondary" : "text-slate-900"}`} {...props} />,
-                      code: ({ node, inline, ...props }) => 
+                      p: ({ ...props }) => <p className={`mb-2 last:mb-0 leading-normal ${isDark ? "text-slate-100" : "text-slate-900"}`} {...props} />,
+                      ul: ({ ...props }) => <ul className={`list-disc list-inside space-y-1 my-2 ${isDark ? "text-slate-100" : "text-slate-800"}`} {...props} />,
+                      ol: ({ ...props }) => <ol className={`list-decimal list-inside space-y-1 my-2 ${isDark ? "text-slate-100" : "text-slate-800"}`} {...props} />,
+                      li: ({ ...props }) => <li className="my-0.5 leading-normal" {...props} />,
+                      strong: ({ ...props }) => <strong className={`font-semibold ${isDark ? "text-secondary" : "text-slate-900"}`} {...props} />,
+                      code: ({ inline, ...props }) => 
                         inline ? (
                           <code className={`px-1.5 py-0.5 rounded font-mono text-[11px] border font-semibold ${
                             isDark 

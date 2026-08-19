@@ -1,11 +1,23 @@
 import React from 'react';
 
+import { useMemo } from 'react';
+
 export const SecurityReportPDF = ({ scanData, repoPath }) => {
   if (!scanData) return null;
 
   const findings = scanData.findings || [];
   const healthScore = scanData.scores?.health_score ?? 85;
   const riskScore = scanData.scores?.risk_score ?? 28;
+
+  const reportMeta = useMemo(() => ({
+    scanDate: new Date().toLocaleDateString(),
+    reportId: `HCH-${Math.random().toString(36).slice(-6).toUpperCase()}`,
+    year: new Date().getFullYear(),
+  }), []);
+
+  const reportId = reportMeta.reportId;
+  const scanDate = reportMeta.scanDate;
+  const year = reportMeta.year;
 
   // Severity counts
   const severityCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
@@ -29,9 +41,9 @@ export const SecurityReportPDF = ({ scanData, repoPath }) => {
 
         <div className="grid grid-cols-2 gap-2 text-xs bg-dark-navy/60 p-3 rounded border border-primary/30 text-primary/60">
           <div><strong className="text-primary/60">Target Path:</strong> {repoPath}</div>
-          <div><strong className="text-primary/60">Scan Date:</strong> {new Date().toLocaleDateString()}</div>
+          <div><strong className="text-primary/60">Scan Date:</strong> {scanDate}</div>
           <div><strong className="text-primary/60">Engine Version:</strong> HardCodedHawk v2.4.0</div>
-          <div><strong className="text-primary/60">Report ID:</strong> HCH-{Date.now().toString().slice(-6)}</div>
+          <div><strong className="text-primary/60">Report ID:</strong> {reportId}</div>
         </div>
       </div>
 
@@ -137,7 +149,7 @@ export const SecurityReportPDF = ({ scanData, repoPath }) => {
 
       {/* Footer */}
       <div className="mt-8 border-t border-primary/30 pt-3 text-center text-[10px] text-primary/60 flex justify-between">
-        <span>HARDCODEDHAWK © {new Date().getFullYear()} Security Assessment</span>
+        <span>HARDCODEDHAWK © {year} Security Assessment</span>
         <span>Confidential & Proprietary</span>
       </div>
     </div>
