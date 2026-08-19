@@ -15,15 +15,10 @@ import { Sphere, MeshDistortMaterial } from "@react-three/drei";
 // Import isolated custom stylesheet
 import "./SecurityDashboard.css";
 
-// Import handling with safe relative component paths
-import * as ComponentImports from "../../components/ui/SecurityReportPDF";
-import * as ChatImports from "../../components/ui/HawkAIChat";
-import * as ServiceImports from "../../services/client";
-
-const SecurityReportPDF = ComponentImports.SecurityReportPDF || ComponentImports.default;
-const HawkAIChat = ChatImports.HawkAIChat || ChatImports.default;
-const scanRepository = ServiceImports.scanRepository || ServiceImports.default;
-
+// Cleaned up direct imports pointing to your ui subfolder
+import HawkAIChat from "../../components/HawkAIChat.jsx";
+import { SecurityReportPDF } from "../../components/SecurityReportPDF.jsx";
+import { scanRepository } from "../../services/client";
 // Severity configuration source of truth
 const SEVERITY_CONFIG = {
   Critical: {
@@ -282,7 +277,7 @@ export const Dashboard = () => {
         )}
       </div>
 
-      {/* Floating AI Assistant Widget - Lifted to bottom-20 so it is clear of status bar */}
+      {/* Floating AI Assistant Widget */}
       {HawkAIChat && (
         <div className="fixed bottom-20 right-6 z-[9999]">
           <HawkAIChat
