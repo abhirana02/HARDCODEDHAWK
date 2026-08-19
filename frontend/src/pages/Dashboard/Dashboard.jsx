@@ -168,23 +168,56 @@ export const Dashboard = () => {
           <div className="space-y-8">
             {/* Top Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
-                <div className="text-xs text-slate-400 mb-1">Health Score</div>
-                <div className="text-2xl font-extrabold text-emerald-400">
-                  {scanData?.scores?.health_score ?? scanData?.healthScore ?? 95}/100
-                </div>
-                <div className="text-[10px] text-slate-500 mt-1">Based on entropy & hygiene risk</div>
-              </div>
+              
+              {/* Dynamic Health Score & Risk Badge Card */}
+              {(() => {
+                const healthScore = scanData?.scores?.health_score ?? scanData?.healthScore ?? 95;
+                let riskLabel = "LOW RISK";
+                let riskColor = "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
+                let scoreColor = "text-emerald-400";
+
+                if (healthScore < 50) {
+                  riskLabel = "CRITICAL RISK";
+                  riskColor = "text-rose-400 border-rose-500/30 bg-rose-500/10";
+                  scoreColor = "text-rose-500";
+                } else if (healthScore < 70) {
+                  riskLabel = "HIGH RISK";
+                  riskColor = "text-orange-400 border-orange-500/30 bg-orange-500/10";
+                  scoreColor = "text-orange-400";
+                } else if (healthScore < 85) {
+                  riskLabel = "MEDIUM RISK";
+                  riskColor = "text-amber-400 border-amber-500/30 bg-amber-500/10";
+                  scoreColor = "text-amber-400";
+                }
+
+                return (
+                  <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-slate-400">Health Score</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono border font-bold ${riskColor}`}>
+                        {riskLabel}
+                      </span>
+                    </div>
+                    <div className={`text-2xl font-extrabold ${scoreColor}`}>
+                      {healthScore}/100
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-1">Weighted secret entropy & hygiene risk</div>
+                  </div>
+                );
+              })()}
+
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Exposed Secrets</div>
                 <div className="text-2xl font-extrabold text-rose-500">{findings.length}</div>
                 <div className="text-[10px] text-slate-500 mt-1">High-risk hardcoded credentials</div>
               </div>
+
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Hygiene Flags</div>
                 <div className="text-2xl font-extrabold text-amber-400">{hygieneIssues.length}</div>
                 <div className="text-[10px] text-slate-500 mt-1">Git track & file security warnings</div>
               </div>
+
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Files Scanned</div>
                 <div className="text-2xl font-extrabold text-blue-400">{scanData?.scanned_files_count ?? scanData?.files_count ?? 12}</div>
@@ -192,7 +225,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* AI Summary Section */}
+            {/* AI Executive Summary */}
             <div className={`p-6 rounded-2xl border glass-panel relative overflow-hidden ${isDark ? 'border-blue-900/40 bg-blue-950/20' : 'border-blue-200 bg-blue-50/50'}`}>
               <div className="flex items-center gap-2 mb-3 text-blue-400 font-semibold text-sm">
                 <Sparkles className="w-5 h-5 animate-pulse" />
@@ -203,7 +236,7 @@ export const Dashboard = () => {
               </div>
             </div>
 
-            {/* Charts & Breakdown */}
+            {/* Severity Distribution Chart */}
             {pieData.length > 0 && (
               <div className={`p-6 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <h3 className="text-sm font-bold mb-4">Vulnerability Severity Distribution</h3>
@@ -222,7 +255,7 @@ export const Dashboard = () => {
               </div>
             )}
 
-            {/* Secret Findings Detailed Table */}
+            {/* Secret Findings Table */}
             <div className={`p-6 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
               <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
                 <Key className="w-4 h-4 text-rose-400" />
@@ -242,7 +275,9 @@ export const Dashboard = () => {
                         <span className="text-rose-400 font-bold">{item.type || item.rule_id || "Exposed Secret"}</span>
                         <span className="px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30">{item.severity || "High"}</span>
                       </div>
-                      <div className="text-slate-400 text-[11px]">File: <span className="text-slate-200">{item.file || item.filename}</span> (Line {item.line || item.line_number || 1})</div>
+                      <div className="text-slate-400 text-[11px]">
+                        Target File: <span className="text-slate-200 font-bold">{item.file || item.filename || "Unknown Path"}</span> (Line {item.line || item.line_number || 1})
+                      </div>
                       <div className="bg-black/60 p-2 rounded text-rose-300/90 text-[11px] overflow-x-auto border border-rose-900/30">
                         <code>{item.match || item.secret || "******"}</code>
                       </div>
@@ -265,13 +300,20 @@ export const Dashboard = () => {
                   <span>Repository git hygiene checks passed without warning!</span>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {hygieneIssues.map((issue, idx) => (
-                    <div key={idx} className="p-3 rounded-xl border border-amber-900/30 bg-amber-950/10 text-xs flex items-start gap-3">
-                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                      <div>
-                        <div className="font-bold text-amber-300">{issue.issue || issue.title || "Hygiene Flag"}</div>
-                        <div className="text-slate-400 text-[11px] mt-0.5">{issue.description || issue.detail || JSON.stringify(issue)}</div>
+                    <div key={idx} className="p-4 rounded-xl border border-amber-900/30 bg-amber-950/10 text-xs flex flex-col gap-1.5 font-mono">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-amber-300">{issue.issue || issue.title || "Hygiene Finding"}</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          {issue.severity || "Medium"}
+                        </span>
+                      </div>
+                      <div className="text-slate-400 text-[11px]">
+                        Target Location: <span className="text-slate-200 font-bold">{issue.file || issue.filename || issue.path || "Repository Root (./)"}</span>
+                      </div>
+                      <div className="text-slate-300 text-[11px] bg-black/40 p-2.5 rounded border border-amber-900/20 mt-1">
+                        {issue.description || issue.detail || (typeof issue === 'string' ? issue : JSON.stringify(issue))}
                       </div>
                     </div>
                   ))}
