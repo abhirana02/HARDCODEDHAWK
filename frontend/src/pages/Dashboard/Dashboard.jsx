@@ -166,26 +166,38 @@ export const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Top Stat Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            
+            {/* Top Stat Cards Grid (5 Columns) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
               
-              {/* Dynamic Health Score & Risk Badge Card */}
+              {/* 1. Health Score Card */}
+              <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
+                <div className="text-xs text-slate-400 mb-1">Health Score</div>
+                <div className="text-2xl font-extrabold text-emerald-400">
+                  {scanData?.scores?.health_score ?? scanData?.healthScore ?? 95}/100
+                </div>
+                <div className="text-[10px] text-slate-500 mt-1">Codebase security index</div>
+              </div>
+
+              {/* 2. DEDICATED RISK SCORE CARD */}
               {(() => {
-                const healthScore = scanData?.scores?.health_score ?? scanData?.healthScore ?? 95;
-                let riskLabel = "LOW RISK";
+                const health = scanData?.scores?.health_score ?? scanData?.healthScore ?? 95;
+                const riskScore = 100 - health; // Inverted Risk Calculation
+                
+                let riskLabel = "LOW";
                 let riskColor = "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
                 let scoreColor = "text-emerald-400";
 
-                if (healthScore < 50) {
-                  riskLabel = "CRITICAL RISK";
+                if (riskScore >= 50) {
+                  riskLabel = "CRITICAL";
                   riskColor = "text-rose-400 border-rose-500/30 bg-rose-500/10";
                   scoreColor = "text-rose-500";
-                } else if (healthScore < 70) {
-                  riskLabel = "HIGH RISK";
+                } else if (riskScore >= 30) {
+                  riskLabel = "HIGH";
                   riskColor = "text-orange-400 border-orange-500/30 bg-orange-500/10";
                   scoreColor = "text-orange-400";
-                } else if (healthScore < 85) {
-                  riskLabel = "MEDIUM RISK";
+                } else if (riskScore >= 15) {
+                  riskLabel = "MEDIUM";
                   riskColor = "text-amber-400 border-amber-500/30 bg-amber-500/10";
                   scoreColor = "text-amber-400";
                 }
@@ -193,39 +205,45 @@ export const Dashboard = () => {
                 return (
                   <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-slate-400">Health Score</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-mono border font-bold ${riskColor}`}>
+                      <span className="text-xs text-slate-400">Risk Score</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono border font-bold ${riskColor}`}>
                         {riskLabel}
                       </span>
                     </div>
                     <div className={`text-2xl font-extrabold ${scoreColor}`}>
-                      {healthScore}/100
+                      {riskScore}/100
                     </div>
-                    <div className="text-[10px] text-slate-500 mt-1">Weighted secret entropy & hygiene risk</div>
+                    <div className="text-[10px] text-slate-500 mt-1">Total exposure severity</div>
                   </div>
                 );
               })()}
 
+              {/* 3. Exposed Secrets Card */}
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Exposed Secrets</div>
                 <div className="text-2xl font-extrabold text-rose-500">{findings.length}</div>
-                <div className="text-[10px] text-slate-500 mt-1">High-risk hardcoded credentials</div>
+                <div className="text-[10px] text-slate-500 mt-1">Hardcoded credentials</div>
               </div>
 
+              {/* 4. Hygiene Flags Card */}
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Hygiene Flags</div>
                 <div className="text-2xl font-extrabold text-amber-400">{hygieneIssues.length}</div>
-                <div className="text-[10px] text-slate-500 mt-1">Git track & file security warnings</div>
+                <div className="text-[10px] text-slate-500 mt-1">Git track warnings</div>
               </div>
 
+              {/* 5. Files Scanned Card */}
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Files Scanned</div>
-                <div className="text-2xl font-extrabold text-blue-400">{scanData?.scanned_files_count ?? scanData?.files_count ?? 12}</div>
-                <div className="text-[10px] text-slate-500 mt-1">Total workspace files checked</div>
+                <div className="text-2xl font-extrabold text-blue-400">
+                  {scanData?.scanned_files_count ?? scanData?.files_count ?? 12}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-1">Workspace files audited</div>
               </div>
+
             </div>
 
-            {/* AI Executive Summary */}
+            {/* AI Executive Summary Box */}
             <div className={`p-6 rounded-2xl border glass-panel relative overflow-hidden ${isDark ? 'border-blue-900/40 bg-blue-950/20' : 'border-blue-200 bg-blue-50/50'}`}>
               <div className="flex items-center gap-2 mb-3 text-blue-400 font-semibold text-sm">
                 <Sparkles className="w-5 h-5 animate-pulse" />
