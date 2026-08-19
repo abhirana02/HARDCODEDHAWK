@@ -1,51 +1,31 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer
 } from "recharts";
 import {
   ShieldAlert, Download, Search, Activity, Key, Code,
   Cpu, ShieldCheck, Play, CheckCircle2, Sun, Moon,
-  Flame, AlertTriangle, AlertCircle, Info, AlertOctagon, HelpCircle
+  Flame, AlertTriangle, AlertCircle, Info, AlertOctagon, HelpCircle,
+  FileText, Sparkles, Terminal, ChevronRight
 } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
 
-// Import isolated custom stylesheet
+// Custom isolated CSS styling
 import "./SecurityDashboard.css";
 
-// Cleaned up direct imports pointing to your ui subfolder
+// Direct UI & Service imports
 import HawkAIChat from "../../components/HawkAIChat.jsx";
 import { SecurityReportPDF } from "../../components/SecurityReportPDF.jsx";
 import { scanRepository } from "../../services/client";
-// Severity configuration source of truth
+
 const SEVERITY_CONFIG = {
-  Critical: {
-    color: '#ef4444',
-    textColor: '#ffffff',
-    Icon: Flame,
-  },
-  High: {
-    color: '#f97316',
-    textColor: '#ffffff',
-    Icon: AlertTriangle,
-  },
-  Medium: {
-    color: '#eab308',
-    textColor: '#ffffff',
-    Icon: AlertCircle,
-  },
-  Low: {
-    color: '#3b82f6',
-    textColor: '#ffffff',
-    Icon: Info,
-  },
-  Info: {
-    color: '#64748b',
-    textColor: '#ffffff',
-    Icon: HelpCircle,
-  },
+  Critical: { color: '#ef4444', textColor: '#ffffff', Icon: Flame },
+  High: { color: '#f97316', textColor: '#ffffff', Icon: AlertTriangle },
+  Medium: { color: '#eab308', textColor: '#ffffff', Icon: AlertCircle },
+  Low: { color: '#3b82f6', textColor: '#ffffff', Icon: Info },
+  Info: { color: '#64748b', textColor: '#ffffff', Icon: HelpCircle },
 };
 
 export const Dashboard = () => {
@@ -79,6 +59,7 @@ export const Dashboard = () => {
 
   const findings = scanData?.findings || [];
   const hygieneIssues = scanData?.hygiene_issues || scanData?.hygieneIssues || [];
+  const aiSummary = scanData?.ai_summary || scanData?.aiSummary || scanData?.summary || "No active vulnerabilities detected requiring remediation.";
 
   const severityCounts = findings.reduce((acc, f) => {
     const sev = f.severity || 'Low';
@@ -93,8 +74,8 @@ export const Dashboard = () => {
   })).filter(item => item.value > 0);
 
   return (
-    <div className={`security-dashboard-container ${isDark ? 'text-slate-100' : 'bg-slate-50 text-slate-900'} transition-colors duration-300 relative pb-16 font-sans overflow-x-hidden`}>
-      {/* Background Hero Canvas Effect */}
+    <div className={`security-dashboard-container ${isDark ? 'text-slate-100' : 'bg-slate-50 text-slate-900'} transition-colors duration-300 relative pb-20 font-sans overflow-x-hidden min-h-screen`}>
+      {/* Background Canvas Effect */}
       <div className="absolute top-0 left-0 right-0 h-96 overflow-hidden pointer-events-none opacity-20 z-0">
         <Canvas>
           <ambientLight intensity={0.5} />
@@ -110,9 +91,8 @@ export const Dashboard = () => {
         </Canvas>
       </div>
 
-      {/* Main Container */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        {/* Top Header Navigation */}
+        {/* Header */}
         <header className="flex justify-between items-center mb-8 pb-4 border-b border-slate-800/60">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-600/20 border border-blue-500/40 rounded-xl text-blue-400">
@@ -124,18 +104,16 @@ export const Dashboard = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsDark(!isDark)}
-              className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
-            >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsDark(!isDark)}
+            className={`p-2 rounded-xl border text-xs font-medium flex items-center gap-1.5 transition ${isDark ? 'bg-slate-800 border-slate-700 text-amber-400 hover:bg-slate-700' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+          >
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>
+          </button>
         </header>
 
-        {/* Scan Target Input Box */}
+        {/* Input Bar */}
         <div className={`p-4 rounded-2xl border mb-8 glass-panel ${isDark ? 'border-slate-800 shadow-2xl' : 'bg-white border-slate-200 shadow-lg'}`}>
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
@@ -156,7 +134,7 @@ export const Dashboard = () => {
               {loading ? (
                 <>
                   <Cpu className="w-4 h-4 animate-spin" />
-                  <span>Scanning...</span>
+                  <span>Scanning Target...</span>
                 </>
               ) : (
                 <>
@@ -175,7 +153,7 @@ export const Dashboard = () => {
           )}
         </div>
 
-        {/* Scan Results View */}
+        {/* Scan Overview or Empty Setup */}
         {!scanData && !loading ? (
           <div className="text-center py-16 px-4">
             <div className="w-20 h-20 mx-auto mb-4 rounded-full border-2 border-dashed border-slate-700 flex items-center justify-center text-slate-500">
@@ -183,82 +161,52 @@ export const Dashboard = () => {
             </div>
             <h2 className="text-xl font-bold mb-2">Ready to Audit Your Codebase</h2>
             <p className="text-xs text-slate-400 max-w-lg mx-auto mb-6">
-              HardCodedHawk utilizes high-entropy mathematical analysis and regex pattern matching to uncover exposed secrets, API keys, and code hygiene issues.
+              Enter a repository path above to trigger deep structural AST entropy analysis and generate AI remediation insights.
             </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto text-left">
-              <div className={`p-4 rounded-xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
-                <Key className="w-5 h-5 text-amber-400 mb-2" />
-                <h3 className="text-xs font-bold mb-1">Secret Detection</h3>
-                <p className="text-[11px] text-slate-400">Scans for hardcoded AWS keys, JWT tokens, private keys, and high-entropy strings.</p>
-              </div>
-              <div className={`p-4 rounded-xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
-                <Code className="w-5 h-5 text-blue-400 mb-2" />
-                <h3 className="text-xs font-bold mb-1">Code Hygiene</h3>
-                <p className="text-[11px] text-slate-400">Identifies tracked sensitive files (.env), missing gitignores, and dangerous configurations.</p>
-              </div>
-              <div className={`p-4 rounded-xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
-                <Cpu className="w-5 h-5 text-emerald-400 mb-2" />
-                <h3 className="text-xs font-bold mb-1">AI Remediation</h3>
-                <p className="text-[11px] text-slate-400">Generates automated offline risk evaluation summaries and step-by-step fix recommendations.</p>
-              </div>
-            </div>
-
-            <div className="mt-8 flex justify-center gap-3">
-              <button
-                onClick={() => {
-                  const target = "local-repo-test";
-                  setRepoPath(target);
-                  handleScan(target);
-                }}
-                className="px-4 py-2 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
-              >
-                Quick Test Target: Local Repo
-              </button>
-              <button
-                onClick={() => {
-                  const target = "https://github.com/octocat/Hello-World.git";
-                  setRepoPath(target);
-                  handleScan(target);
-                }}
-                className="px-4 py-2 rounded-lg text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
-              >
-                Public GitHub Repo
-              </button>
-            </div>
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Health Score Overview Cards */}
+            {/* Top Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Health Score</div>
                 <div className="text-2xl font-extrabold text-emerald-400">
                   {scanData?.scores?.health_score ?? scanData?.healthScore ?? 95}/100
                 </div>
-                <div className="text-[10px] text-slate-500 mt-1">Based on secret entropy & hygiene</div>
+                <div className="text-[10px] text-slate-500 mt-1">Based on entropy & hygiene risk</div>
               </div>
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Exposed Secrets</div>
                 <div className="text-2xl font-extrabold text-rose-500">{findings.length}</div>
-                <div className="text-[10px] text-slate-500 mt-1">High-risk hardcoded values</div>
+                <div className="text-[10px] text-slate-500 mt-1">High-risk hardcoded credentials</div>
               </div>
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Hygiene Flags</div>
                 <div className="text-2xl font-extrabold text-amber-400">{hygieneIssues.length}</div>
-                <div className="text-[10px] text-slate-500 mt-1">Git hygiene & file tracking</div>
+                <div className="text-[10px] text-slate-500 mt-1">Git track & file security warnings</div>
               </div>
               <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
                 <div className="text-xs text-slate-400 mb-1">Files Scanned</div>
                 <div className="text-2xl font-extrabold text-blue-400">{scanData?.scanned_files_count ?? scanData?.files_count ?? 12}</div>
-                <div className="text-[10px] text-slate-500 mt-1">Total repository depth</div>
+                <div className="text-[10px] text-slate-500 mt-1">Total workspace files checked</div>
               </div>
             </div>
 
-            {/* Findings Breakdowns */}
+            {/* AI Summary Section */}
+            <div className={`p-6 rounded-2xl border glass-panel relative overflow-hidden ${isDark ? 'border-blue-900/40 bg-blue-950/20' : 'border-blue-200 bg-blue-50/50'}`}>
+              <div className="flex items-center gap-2 mb-3 text-blue-400 font-semibold text-sm">
+                <Sparkles className="w-5 h-5 animate-pulse" />
+                <h2>Hawk Security AI Executive Summary</h2>
+              </div>
+              <div className="text-xs text-slate-300 leading-relaxed font-mono whitespace-pre-wrap bg-slate-950/60 p-4 rounded-xl border border-blue-900/30">
+                {typeof aiSummary === 'string' ? aiSummary : JSON.stringify(aiSummary, null, 2)}
+              </div>
+            </div>
+
+            {/* Charts & Breakdown */}
             {pieData.length > 0 && (
               <div className={`p-6 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
-                <h3 className="text-sm font-bold mb-4">Severity Distribution</h3>
+                <h3 className="text-sm font-bold mb-4">Vulnerability Severity Distribution</h3>
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -273,25 +221,80 @@ export const Dashboard = () => {
                 </div>
               </div>
             )}
+
+            {/* Secret Findings Detailed Table */}
+            <div className={`p-6 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
+              <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+                <Key className="w-4 h-4 text-rose-400" />
+                <span>Detected Hardcoded Secrets ({findings.length})</span>
+              </h3>
+              
+              {findings.length === 0 ? (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>No hardcoded secrets detected in this target branch!</span>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {findings.map((item, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-slate-800 bg-slate-950/50 font-mono text-xs flex flex-col gap-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-rose-400 font-bold">{item.type || item.rule_id || "Exposed Secret"}</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30">{item.severity || "High"}</span>
+                      </div>
+                      <div className="text-slate-400 text-[11px]">File: <span className="text-slate-200">{item.file || item.filename}</span> (Line {item.line || item.line_number || 1})</div>
+                      <div className="bg-black/60 p-2 rounded text-rose-300/90 text-[11px] overflow-x-auto border border-rose-900/30">
+                        <code>{item.match || item.secret || "******"}</code>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Code Hygiene Detailed Section */}
+            <div className={`p-6 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
+              <h3 className="text-sm font-bold mb-4 flex items-center gap-2">
+                <Code className="w-4 h-4 text-amber-400" />
+                <span>Git Hygiene Flags ({hygieneIssues.length})</span>
+              </h3>
+
+              {hygieneIssues.length === 0 ? (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Repository git hygiene checks passed without warning!</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {hygieneIssues.map((issue, idx) => (
+                    <div key={idx} className="p-3 rounded-xl border border-amber-900/30 bg-amber-950/10 text-xs flex items-start gap-3">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="font-bold text-amber-300">{issue.issue || issue.title || "Hygiene Flag"}</div>
+                        <div className="text-slate-400 text-[11px] mt-0.5">{issue.description || issue.detail || JSON.stringify(issue)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Floating AI Assistant Widget */}
-      {HawkAIChat && (
-        <div className="fixed bottom-20 right-6 z-[9999]">
-          <HawkAIChat
-            scanData={scanData}
-            loading={loading}
-            repoPath={repoPath}
-            error={error}
-            currentPage="Dashboard"
-            isDark={isDark}
-          />
-        </div>
-      )}
+      {/* Floating AI Chat Assistant */}
+      <div className="fixed bottom-20 right-6 z-[9999]">
+        <HawkAIChat
+          scanData={scanData}
+          loading={loading}
+          repoPath={repoPath}
+          error={error}
+          currentPage="Dashboard"
+          isDark={isDark}
+        />
+      </div>
 
-      {/* Fixed Status Bar Footer */}
+      {/* Status Footer */}
       <footer className={`fixed bottom-0 left-0 right-0 py-2 px-6 border-t text-[11px] font-mono flex justify-between items-center z-40 backdrop-blur-md ${isDark ? 'bg-slate-950/90 border-slate-800/80 text-slate-400' : 'bg-white/90 border-slate-200 text-slate-600'}`}>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
