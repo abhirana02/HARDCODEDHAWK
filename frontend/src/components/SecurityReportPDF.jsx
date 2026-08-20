@@ -1,23 +1,12 @@
-import React from 'react';
-
-import { useMemo } from 'react';
-
 export const SecurityReportPDF = ({ scanData, repoPath }) => {
   if (!scanData) return null;
 
   const findings = scanData.findings || [];
   const healthScore = scanData.scores?.health_score ?? 85;
   const riskScore = scanData.scores?.risk_score ?? 28;
-
-  const reportMeta = useMemo(() => ({
-    scanDate: new Date().toLocaleDateString(),
-    reportId: `HCH-${Math.random().toString(36).slice(-6).toUpperCase()}`,
-    year: new Date().getFullYear(),
-  }), []);
-
-  const reportId = reportMeta.reportId;
-  const scanDate = reportMeta.scanDate;
-  const year = reportMeta.year;
+  const reportId = `HCH-${Date.now().toString(36).slice(-6).toUpperCase()}`;
+  const scanDate = new Date().toLocaleDateString();
+  const year = new Date().getFullYear();
 
   // Severity counts
   const severityCounts = { Critical: 0, High: 0, Medium: 0, Low: 0 };

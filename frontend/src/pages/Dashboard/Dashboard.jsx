@@ -4,10 +4,10 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer
 } from "recharts";
 import {
-  ShieldAlert, Download, Search, Activity, Key, Code,
-  Cpu, ShieldCheck, Play, CheckCircle2, Sun, Moon,
-  Flame, AlertTriangle, AlertCircle, Info, AlertOctagon, HelpCircle,
-  FileText, Sparkles, Terminal, ChevronRight
+  ShieldAlert, Search, Key, Code, Cpu, ShieldCheck, Play, 
+  CheckCircle2, Sun, Moon, Flame, AlertTriangle, AlertCircle, 
+  Info, AlertOctagon, HelpCircle, Sparkles, Terminal, ArrowRight,
+  Zap, Lock, FileCode2, GitBranch, Layers
 } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
@@ -17,7 +17,6 @@ import "./SecurityDashboard.css";
 
 // Direct UI & Service imports
 import HawkAIChat from "../../components/HawkAIChat.jsx";
-import { SecurityReportPDF } from "../../components/SecurityReportPDF.jsx";
 import { scanRepository } from "../../services/client";
 
 const SEVERITY_CONFIG = {
@@ -28,9 +27,16 @@ const SEVERITY_CONFIG = {
   Info: { color: '#64748b', textColor: '#ffffff', Icon: HelpCircle },
 };
 
+// Preset Repositories for Quick One-Click Audit
+const PRESET_REPOS = [
+  { name: "DVWA", url: "https://github.com/digininja/DVWA.git", desc: "Damn Vulnerable Web Application", tag: "PHP / Secrets" },
+  { name: "OWASP Juice Shop", url: "https://github.com/juice-shop/juice-shop.git", desc: "Modern Insecure Web App", tag: "Node.js / Secrets" },
+  { name: "NodeGoat", url: "https://github.com/OWASP/NodeGoat.git", desc: "OWASP Top 10 Node.js App", tag: "JS / Hardcoded Keys" },
+];
+
 export const Dashboard = () => {
   const [repoPath, setRepoPath] = useState(() => {
-    return localStorage.getItem("hawk_last_repo_path") || "https://github.com/octocat/Hello-World.git";
+    return localStorage.getItem("hawk_last_repo_path") || "https://github.com/digininja/DVWA.git";
   });
   const [scanData, setScanData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -153,16 +159,83 @@ export const Dashboard = () => {
           )}
         </div>
 
-        {/* Scan Overview or Empty Setup */}
+        {/* PRE-SCAN LANDING VIEW */}
         {!scanData && !loading ? (
-          <div className="text-center py-16 px-4">
-            <div className="w-20 h-20 mx-auto mb-4 rounded-full border-2 border-dashed border-slate-700 flex items-center justify-center text-slate-500">
-              <ShieldCheck className="w-10 h-10" />
+          <div className="space-y-8 py-4">
+            
+            {/* Quick Demo Target Selection */}
+            <div>
+              <div className="flex items-center gap-2 mb-3 text-xs font-mono text-slate-400 uppercase tracking-wider">
+                <Zap className="w-4 h-4 text-amber-400" />
+                <span>Quick Test Bench (One-Click Audit)</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {PRESET_REPOS.map((preset, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      setRepoPath(preset.url);
+                      handleScan(preset.url);
+                    }}
+                    className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 group hover:border-blue-500/50 ${
+                      isDark 
+                        ? 'bg-slate-900/60 border-slate-800 hover:bg-slate-900' 
+                        : 'bg-white border-slate-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-sm text-slate-200 group-hover:text-blue-400 transition">
+                        {preset.name}
+                      </h3>
+                      <span className="px-2 py-0.5 rounded text-[9px] font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {preset.tag}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mb-3">{preset.desc}</p>
+                    <div className="flex items-center text-[11px] font-mono text-blue-400 font-semibold group-hover:translate-x-1 transition-transform">
+                      <span>Launch Scan</span>
+                      <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h2 className="text-xl font-bold mb-2">Ready to Audit Your Codebase</h2>
-            <p className="text-xs text-slate-400 max-w-lg mx-auto mb-6">
-              Enter a repository path above to trigger deep structural AST entropy analysis and generate AI remediation insights.
-            </p>
+
+            {/* Active Security Scanner Capabilities Grid */}
+            <div className={`p-6 rounded-2xl border ${isDark ? 'border-slate-800 bg-slate-950/40' : 'bg-white border-slate-200'}`}>
+              <div className="flex items-center gap-2 mb-4">
+                <Layers className="w-5 h-5 text-blue-400" />
+                <h3 className="text-sm font-bold">HardCodedHawk Detection Engine Specs</h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                
+                <div className="p-3 rounded-xl border border-slate-800/80 bg-slate-900/40 text-center">
+                  <Lock className="w-5 h-5 mx-auto mb-1 text-rose-400" />
+                  <div className="text-xs font-bold mb-0.5">Cloud API Keys</div>
+                  <div className="text-[10px] text-slate-500">AWS, GCP, Azure, Stripe</div>
+                </div>
+
+                <div className="p-3 rounded-xl border border-slate-800/80 bg-slate-900/40 text-center">
+                  <Key className="w-5 h-5 mx-auto mb-1 text-amber-400" />
+                  <div className="text-xs font-bold mb-0.5">Private Secrets</div>
+                  <div className="text-[10px] text-slate-500">SSH, RSA Keys, Tokens</div>
+                </div>
+
+                <div className="p-3 rounded-xl border border-slate-800/80 bg-slate-900/40 text-center">
+                  <GitBranch className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
+                  <div className="text-xs font-bold mb-0.5">Git Track Hygiene</div>
+                  <div className="text-[10px] text-slate-500">.env files, loose track</div>
+                </div>
+
+                <div className="p-3 rounded-xl border border-slate-800/80 bg-slate-900/40 text-center">
+                  <Sparkles className="w-5 h-5 mx-auto mb-1 text-purple-400" />
+                  <div className="text-xs font-bold mb-0.5">AI AST Remediation</div>
+                  <div className="text-[10px] text-slate-500">Auto fix suggestions</div>
+                </div>
+
+              </div>
+            </div>
+
           </div>
         ) : (
           <div className="space-y-8">
@@ -170,16 +243,41 @@ export const Dashboard = () => {
             {/* Top Stat Cards Grid (5 Columns) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
               
-              {/* 1. Health Score Card */}
-              <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
-                <div className="text-xs text-slate-400 mb-1">Health Score</div>
-                <div className="text-2xl font-extrabold text-emerald-400">
-                  {scanData?.scores?.health_score ?? scanData?.healthScore ?? 95}/100
-                </div>
-                <div className="text-[10px] text-slate-500 mt-1">Codebase security index</div>
-              </div>
+              {/* 1. Health Score Card (Higher = Better) */}
+              {(() => {
+                const healthScore = scanData?.scores?.health_score ?? scanData?.healthScore ?? 95;
+                
+                let healthLabel = "EXCELLENT";
+                let healthColor = "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
 
-              {/* 2. DEDICATED RISK SCORE CARD */}
+                if (healthScore < 30) {
+                  healthLabel = "CRITICAL";
+                  healthColor = "text-rose-400 border-rose-500/30 bg-rose-500/10";
+                } else if (healthScore < 60) {
+                  healthLabel = "POOR";
+                  healthColor = "text-orange-400 border-orange-500/30 bg-orange-500/10";
+                } else if (healthScore < 80) {
+                  healthLabel = "GOOD";
+                  healthColor = "text-amber-400 border-amber-500/30 bg-amber-500/10";
+                }
+
+                return (
+                  <div className={`p-4 rounded-2xl border glass-panel ${isDark ? 'border-slate-800' : 'bg-white border-slate-200'}`}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs text-slate-400">Health Score</span>
+                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono border font-bold ${healthColor}`}>
+                        {healthLabel}
+                      </span>
+                    </div>
+                    <div className="text-2xl font-extrabold text-emerald-400">
+                      {healthScore}/100
+                    </div>
+                    <div className="text-[10px] text-slate-500 mt-1">Codebase security index</div>
+                  </div>
+                );
+              })()}
+
+              {/* 2. Risk Score Card (Higher = Worse) */}
               {(() => {
                 const health = scanData?.scores?.health_score ?? scanData?.healthScore ?? 95;
                 const riskScore = 100 - health; // Inverted Risk Calculation
@@ -188,16 +286,16 @@ export const Dashboard = () => {
                 let riskColor = "text-emerald-400 border-emerald-500/30 bg-emerald-500/10";
                 let scoreColor = "text-emerald-400";
 
-                if (riskScore >= 50) {
+                if (riskScore >= 80) {
                   riskLabel = "CRITICAL";
                   riskColor = "text-rose-400 border-rose-500/30 bg-rose-500/10";
                   scoreColor = "text-rose-500";
-                } else if (riskScore >= 30) {
+                } else if (riskScore >= 60) {
                   riskLabel = "HIGH";
                   riskColor = "text-orange-400 border-orange-500/30 bg-orange-500/10";
                   scoreColor = "text-orange-400";
-                } else if (riskScore >= 15) {
-                  riskLabel = "MEDIUM";
+                } else if (riskScore >= 30) {
+                  riskLabel = "MODERATE";
                   riskColor = "text-amber-400 border-amber-500/30 bg-amber-500/10";
                   scoreColor = "text-amber-400";
                 }
