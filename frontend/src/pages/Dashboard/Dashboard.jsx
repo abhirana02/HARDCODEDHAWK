@@ -7,7 +7,7 @@ import {
   ShieldAlert, Search, Key, Code, Cpu, ShieldCheck, Play, 
   CheckCircle2, Sun, Moon, Flame, AlertTriangle, AlertCircle, 
   Info, AlertOctagon, HelpCircle, Sparkles, Terminal, ArrowRight,
-  Zap, Lock, FileCode2, GitBranch, Layers
+  Zap, Lock, FileCode2, GitBranch, Layers, UploadCloud, FileArchive, X
 } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
@@ -35,31 +35,80 @@ const PRESET_REPOS = [
 ];
 
 export const Dashboard = () => {
+  const [scanMode, setScanMode] = useState("git"); // 'git' | 'upload'
   const [repoPath, setRepoPath] = useState(() => {
     return localStorage.getItem("hawk_last_repo_path") || "https://github.com/digininja/DVWA.git";
   });
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  
   const [scanData, setScanData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isDark, setIsDark] = useState(true);
 
-  const handleScan = async (pathToScan = repoPath) => {
-    if (!pathToScan || !pathToScan.trim()) {
+  // Trigger Scan for Git URL or Zip Upload
+  const handleScan = async (target = repoPath) => {
+    if (scanMode === "git" && (!target || !target.trim())) {
       setError("Please enter a valid Git repository URL or local folder path.");
+      return;
+    }
+
+    if (scanMode === "upload" && !uploadedFile) {
+      setError("Please upload a .zip archive before launching the scan.");
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      localStorage.setItem("hawk_last_repo_path", pathToScan);
-      const data = await scanRepository(pathToScan);
+      let data;
+      if (scanMode === "git") {
+        localStorage.setItem("hawk_last_repo_path", target);
+        data = await scanRepository(target);
+      } else {
+        // Zip File Upload Scan Payload
+        const formData = new FormData();
+        formData.append("file", uploadedFile);
+        data = await scanRepository(formData);
+      }
       setScanData(data);
     } catch (err) {
       console.error("Scan error:", err);
       setError(err.message || "Failed to complete security scan.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Drag and Drop Handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.name.endsWith('.zip') || file.name.endsWith('.tar') || file.name.endsWith('.gz')) {
+        setUploadedFile(file);
+        setError(null);
+      } else {
+        setError("Invalid file type. Please upload a .zip, .tar, or .gz archive.");
+      }
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setUploadedFile(e.target.files[0]);
+      setError(null);
     }
   };
 
@@ -119,37 +168,114 @@ export const Dashboard = () => {
           </button>
         </header>
 
-        {/* Input Bar */}
-        <div className={`p-4 rounded-2xl border mb-8 glass-panel ${isDark ? 'border-slate-800 shadow-2xl' : 'bg-white border-slate-200 shadow-lg'}`}>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
-              <input
-                type="text"
-                value={repoPath}
-                onChange={(e) => setRepoPath(e.target.value)}
-                placeholder="Enter GitHub URL (e.g. https://github.com/org/repo.git) or Local Folder Path..."
-                className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-mono outline-none border transition ${isDark ? 'bg-slate-950/80 border-slate-800 text-slate-100 focus:border-blue-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500'}`}
-              />
-            </div>
+        {/* Input Bar & Mode Selector */}
+        <div className={`p-5 rounded-2xl border mb-8 glass-panel ${isDark ? 'border-slate-800 shadow-2xl bg-slate-950/60' : 'bg-white border-slate-200 shadow-lg'}`}>
+          
+          {/* Mode Toggle Tabs */}
+          <div className="flex gap-2 mb-4 border-b border-slate-800/60 pb-3">
             <button
-              onClick={() => handleScan(repoPath)}
-              disabled={loading}
-              className={`px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer shadow-lg shadow-blue-600/20 ${loading ? 'scan-active-glow' : ''}`}
+              onClick={() => { setScanMode("git"); setError(null); }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition cursor-pointer ${
+                scanMode === "git" 
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30" 
+                  : "bg-slate-900/50 text-slate-400 hover:text-slate-200"
+              }`}
             >
-              {loading ? (
-                <>
-                  <Cpu className="w-4 h-4 animate-spin" />
-                  <span>Scanning Target...</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>Start Security Scan</span>
-                </>
-              )}
+              <GitBranch className="w-3.5 h-3.5" />
+              <span>Public Git Repository</span>
+            </button>
+
+            <button
+              onClick={() => { setScanMode("upload"); setError(null); }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-2 transition cursor-pointer ${
+                scanMode === "upload" 
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-600/30" 
+                  : "bg-slate-900/50 text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <FolderUpload className="w-3.5 h-3.5" />
+              <span>Local Zip Upload</span>
             </button>
           </div>
+
+          {/* Mode 1: Public Git URL Input */}
+          {scanMode === "git" ? (
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={repoPath}
+                  onChange={(e) => setRepoPath(e.target.value)}
+                  placeholder="Enter GitHub URL (e.g. https://github.com/org/repo.git)..."
+                  className={`w-full pl-10 pr-4 py-2.5 rounded-xl text-xs font-mono outline-none border transition ${
+                    isDark ? 'bg-slate-950/80 border-slate-800 text-slate-100 focus:border-blue-500' : 'bg-slate-50 border-slate-300 text-slate-900 focus:border-blue-500'
+                  }`}
+                />
+              </div>
+              <button
+                onClick={() => handleScan(repoPath)}
+                disabled={loading}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-blue-600/20 disabled:opacity-50"
+              >
+                {loading ? <Cpu className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
+                <span>{loading ? "Scanning Target..." : "Start Security Scan"}</span>
+              </button>
+            </div>
+          ) : (
+            /* Mode 2: Drag & Drop Zip File Upload */
+            <div className="space-y-3">
+              {!uploadedFile ? (
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-xl p-6 text-center transition cursor-pointer relative ${
+                    isDragging 
+                      ? 'border-blue-500 bg-blue-500/10' 
+                      : isDark ? 'border-slate-800 bg-slate-900/40 hover:border-blue-500/50' : 'border-slate-300 bg-slate-50 hover:border-blue-500/50'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept=".zip,.tar,.gz"
+                    onChange={handleFileSelect}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <UploadCloud className="w-8 h-8 mx-auto mb-2 text-blue-400" />
+                  <div className="text-xs font-bold text-slate-200">Drag & drop project archive here, or <span className="text-blue-400 underline">browse</span></div>
+                  <div className="text-[10px] text-slate-500 mt-1">Supports .zip, .tar, .gz (Max 50MB)</div>
+                </div>
+              ) : (
+                /* Selected File Preview Box */
+                <div className="flex items-center justify-between p-3.5 rounded-xl border border-blue-500/30 bg-blue-950/20 font-mono text-xs">
+                  <div className="flex items-center gap-3">
+                    <FileArchive className="w-5 h-5 text-blue-400 shrink-0" />
+                    <div>
+                      <div className="font-bold text-slate-200">{uploadedFile.name}</div>
+                      <div className="text-[10px] text-slate-400">{(uploadedFile.size / (1024 * 1024)).toFixed(2)} MB</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleScan()}
+                      disabled={loading}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition disabled:opacity-50"
+                    >
+                      {loading ? <Cpu className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-current" />}
+                      <span>{loading ? "Scanning..." : "Scan Upload"}</span>
+                    </button>
+                    <button
+                      onClick={() => setUploadedFile(null)}
+                      className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-rose-400 transition"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="mt-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
@@ -174,6 +300,7 @@ export const Dashboard = () => {
                   <div
                     key={idx}
                     onClick={() => {
+                      setScanMode("git");
                       setRepoPath(preset.url);
                       handleScan(preset.url);
                     }}
