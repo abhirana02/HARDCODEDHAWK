@@ -7,7 +7,8 @@ import {
   ShieldAlert, Search, Key, Code, Cpu, ShieldCheck, Play, 
   CheckCircle2, Sun, Moon, Flame, AlertTriangle, AlertCircle, 
   Info, AlertOctagon, HelpCircle, Sparkles, Terminal, ArrowRight,
-  Zap, Lock, FileCode2, GitBranch, Layers, UploadCloud, FileArchive, X
+  Zap, Lock, FileCode2, GitBranch, Layers, UploadCloud, FileArchive, X,
+  FolderUp // Added correct icon import
 } from "lucide-react";
 import { Canvas } from "@react-three/fiber";
 import { Sphere, MeshDistortMaterial } from "@react-three/drei";
@@ -193,7 +194,7 @@ export const Dashboard = () => {
                   : "bg-slate-900/50 text-slate-400 hover:text-slate-200"
               }`}
             >
-              <FolderUpload className="w-3.5 h-3.5" />
+              <FolderUp className="w-3.5 h-3.5" />
               <span>Local Zip Upload</span>
             </button>
           </div>
