@@ -130,7 +130,7 @@ export const Dashboard = () => {
   })).filter(item => item.value > 0);
 
   return (
-    <div className={`security-dashboard-container ${isDark ? 'text-slate-100' : 'bg-slate-50 text-slate-900'} transition-colors duration-300 relative pb-20 font-sans overflow-x-hidden min-h-screen`}>
+    <div className={`security-dashboard-container ${isDark ? 'theme-dark' : 'theme-light'} transition-colors duration-300 relative pb-20 font-sans overflow-x-hidden min-h-screen`}>
       {/* Background Canvas Effect */}
       <div className="absolute top-0 left-0 right-0 h-96 overflow-hidden pointer-events-none opacity-20 z-0">
         <Canvas>

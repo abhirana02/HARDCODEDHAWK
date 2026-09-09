@@ -119,13 +119,61 @@ def check_repo_limits(target_path):
     }
 
 
+def normalize_semgrep_findings(data):
+    """Convert Semgrep JSON into the dashboard's findings schema."""
+    findings = []
+    for item in (data or {}).get("results", []) or []:
+        extra = item.get("extra", {})
+        severity = extra.get("severity", "ERROR").upper()
+        if severity in {"ERROR", "CRITICAL"}:
+            normalized_severity = "Critical"
+        elif severity in {"WARNING", "HIGH"}:
+            normalized_severity = "High"
+        else:
+            normalized_severity = "Medium"
+
+        findings.append({
+            "type": item.get("check_id", extra.get("category", "Code vulnerability")),
+            "severity": normalized_severity,
+            "file": item.get("path", "Unknown"),
+            "line": item.get("start", {}).get("line", 1),
+            "match": extra.get("lines", "").strip(),
+            "description": extra.get("message", "Potential code vulnerability detected"),
+        })
+    return findings
+
+
+def normalize_trivy_findings(data):
+    """Convert Trivy JSON into the dashboard's hygiene_issues schema."""
+    issues = []
+    for result in (data or {}).get("Results", []) or []:
+        target_name = result.get("Target", "Unknown")
+
+        for vuln in result.get("Vulnerabilities", []) or []:
+            issues.append({
+                "issue": f"{vuln.get('PkgName', 'Dependency')} ({vuln.get('VulnerabilityID', 'VULN')})",
+                "severity": vuln.get("Severity", "Medium").capitalize(),
+                "file": target_name,
+                "description": f"Installed version: {vuln.get('InstalledVersion', 'unknown')} | Fixed version: {vuln.get('FixedVersion', 'not specified')}",
+            })
+
+        for secret in result.get("Secrets", []) or []:
+            issues.append({
+                "issue": secret.get("Title", "Secret detected"),
+                "severity": secret.get("Severity", "High").capitalize(),
+                "file": target_name,
+                "description": f"Secret found at line {secret.get('StartLine', 1)}."
+            })
+    return issues
+
+
 def run_semgrep(target_path):
     """Executes Semgrep SAST scan with CLI performance exclusions."""
     try:
         cmd = [
-            "semgrep", "scan", 
-            "--config=auto", 
-            "--json", 
+            "semgrep", "scan",
+            "--config=auto",
+            "--json",
             "--quiet",
             "--exclude=node_modules",
             "--exclude=.venv",
@@ -140,35 +188,20 @@ def run_semgrep(target_path):
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
         if not result.stdout:
-            return []
+            return {"results": []}
 
         data = json.loads(result.stdout)
-        results = data.get("results", [])
-
-        normalized_findings = []
-        for item in results:
-            extra = item.get("extra", {})
-            raw_sev = extra.get("severity", "Medium").capitalize()
-            severity = "High" if raw_sev == "Error" else raw_sev
-
-            normalized_findings.append({
-                "severity": severity,
-                "type": extra.get("category", "Code Vulnerability"),
-                "file": item.get("path", "Unknown"),
-                "line": item.get("start", {}).get("line", 1),
-                "description": f"[Semgrep] {extra.get('message', 'Vulnerability detected')}"
-            })
-        return normalized_findings
+        return data if isinstance(data, dict) else {"results": []}
     except Exception as e:
         print(f"[HardcodedHawk] Error running Semgrep: {e}")
-        return []
+        return {"results": []}
 
 
 def run_trivy(target_path):
     """Executes Trivy filesystem scan with CLI directory skip flags."""
     try:
         cmd = [
-            "trivy", "fs", 
+            "trivy", "fs",
             "--format", "json",
             "--skip-dirs", "node_modules,.venv,.git,dist,build,vendor",
             "--skip-files", "*.min.js,*.pdf,*.zip",
@@ -177,39 +210,13 @@ def run_trivy(target_path):
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
         if not result.stdout:
-            return []
+            return {"Results": []}
 
         data = json.loads(result.stdout)
-        results = data.get("Results", [])
-
-        normalized_findings = []
-        for target in results:
-            target_name = target.get("Target", "Unknown File")
-            
-            for vuln in target.get("Vulnerabilities", []) or []:
-                sev = vuln.get("Severity", "Medium").capitalize()
-                normalized_findings.append({
-                    "severity": sev,
-                    "type": f"SCA ({vuln.get('PkgName', 'Dependency')})",
-                    "file": target_name,
-                    "line": "-",
-                    "description": f"[Trivy {vuln.get('VulnerabilityID', 'CVE')}] {vuln.get('Title', 'Vulnerable Dependency')}"
-                })
-
-            for secret in target.get("Secrets", []) or []:
-                sev = secret.get("Severity", "High").capitalize()
-                normalized_findings.append({
-                    "severity": sev,
-                    "type": secret.get("Category", "Secret Leak"),
-                    "file": target_name,
-                    "line": secret.get("StartLine", 1),
-                    "description": f"[Trivy] {secret.get('Title', 'Exposed Secret')}"
-                })
-
-        return normalized_findings
+        return data if isinstance(data, dict) else {"Results": []}
     except Exception as e:
         print(f"[HardcodedHawk] Error running Trivy: {e}")
-        return []
+        return {"Results": []}
 
 
 @app.route("/")
@@ -273,18 +280,24 @@ def scan():
         if "error" in result:
             return jsonify({"error": result["error"]}), 400
 
-        # 3. TEMPORARILY BYPASS SEMGREP & TRIVY SUBPROCESSES (For fast response)
-        print("[HardcodedHawk] Bypassing CLI subprocesses (Semgrep & Trivy) for fast response...")
-        semgrep_results = []
-        trivy_results = []
+        # 3. Run real CLI scanners when available and merge them into the existing result schema
+        print("[HardcodedHawk] Running CLI scanner integration (Semgrep + Trivy)...")
+        semgrep_data = run_semgrep(target_scan_path)
+        trivy_data = run_trivy(target_scan_path)
+
+        semgrep_results = normalize_semgrep_findings(semgrep_data)
+        trivy_results = normalize_trivy_findings(trivy_data)
 
         # 4. Combine findings into existing findings list
         existing_findings = result.get("findings", [])
-        combined_findings = existing_findings + semgrep_results + trivy_results
+        existing_hygiene = result.get("hygiene_issues", [])
+        combined_findings = existing_findings + semgrep_results
+        combined_hygiene = existing_hygiene + trivy_results
         result["findings"] = combined_findings
+        result["hygiene_issues"] = combined_hygiene
 
         # 5. Recalculate health & risk scores based on new combined issues count
-        total_issues = len(combined_findings) + len(result.get("hygiene_issues", []))
+        total_issues = len(combined_findings) + len(combined_hygiene)
         risk_score = min(100, total_issues * 5)
         health_score = max(0, 100 - risk_score)
 
@@ -296,7 +309,7 @@ def scan():
             result["healthScore"] = health_score
 
         # 6. Append Engine notes to AI summary
-        extra_summary = f"\n\n[Multi-Engine Integration] Core Engine Scan Completed. Analyzed target codebase."
+        extra_summary = f"\n\n[Multi-Engine Integration] Core Engine Scan Completed. Analyzed target codebase with Semgrep + Trivy integration."
         if "ai_summary" in result and result["ai_summary"]:
             result["ai_summary"] += extra_summary
         else:

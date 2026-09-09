@@ -9,6 +9,13 @@
   padding-bottom: 4rem;
 }
 
+.security-dashboard-container.theme-light {
+  background:
+    radial-gradient(circle at top, rgba(96, 165, 250, 0.16), transparent 32%),
+    linear-gradient(180deg, #eef6ff 0%, #f8fafc 100%);
+  color: #0f172a;
+}
+
 /* Custom Scrollbar for Dashboard Panels */
 .security-dashboard-container ::-webkit-scrollbar {
   width: 6px;
@@ -35,6 +42,59 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.security-dashboard-container.theme-light .glass-panel {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+
+.security-dashboard-container.theme-light .text-slate-200,
+.security-dashboard-container.theme-light .text-slate-300,
+.security-dashboard-container.theme-light .text-slate-100 {
+  color: #0f172a !important;
+}
+
+.security-dashboard-container.theme-light .text-slate-400,
+.security-dashboard-container.theme-light .text-slate-500,
+.security-dashboard-container.theme-light .text-slate-600 {
+  color: #475569 !important;
+}
+
+.security-dashboard-container.theme-light .border-slate-800,
+.security-dashboard-container.theme-light .border-slate-800\/60,
+.security-dashboard-container.theme-light .border-slate-800\/80,
+.security-dashboard-container.theme-light .border-slate-900\/30,
+.security-dashboard-container.theme-light .border-slate-800\/40 {
+  border-color: rgba(148, 163, 184, 0.45) !important;
+}
+
+.security-dashboard-container.theme-light .bg-slate-950\/60,
+.security-dashboard-container.theme-light .bg-slate-950\/50,
+.security-dashboard-container.theme-light .bg-slate-900\/60,
+.security-dashboard-container.theme-light .bg-slate-900\/40,
+.security-dashboard-container.theme-light .bg-slate-900,
+.security-dashboard-container.theme-light .bg-slate-800,
+.security-dashboard-container.theme-light .bg-slate-800\/60,
+.security-dashboard-container.theme-light .bg-slate-800\/80,
+.security-dashboard-container.theme-light .bg-slate-950 {
+  background-color: rgba(255, 255, 255, 0.86) !important;
+}
+
+.security-dashboard-container.theme-light .bg-black\/60 {
+  background-color: rgba(15, 23, 42, 0.03) !important;
+}
+
+.security-dashboard-container.theme-light .bg-slate-900\/20 {
+  background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.security-dashboard-container.theme-light .bg-blue-950\/20,
+.security-dashboard-container.theme-light .bg-amber-950\/10,
+.security-dashboard-container.theme-light .bg-emerald-500\/10,
+.security-dashboard-container.theme-light .bg-rose-500\/10 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 /* Pulse animation for scanning indicators */
