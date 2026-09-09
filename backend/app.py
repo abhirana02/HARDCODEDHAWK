@@ -34,8 +34,24 @@ project_root = Path(__file__).resolve().parent.parent
 frontend_dist = project_root / "frontend" / "dist"
 app = Flask(__name__, static_folder=str(frontend_dist) if frontend_dist.exists() else None, static_url_path="/")
 
-# 3. Enable CORS for all API routes so Vite/React UI can talk to Flask
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# 3. Enable CORS for the frontend origin(s) used in local dev and deployment
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+configured_frontend_origin = os.getenv("FRONTEND_URL")
+if configured_frontend_origin:
+    allowed_origins.append(configured_frontend_origin)
+
+CORS(
+    app,
+    resources={r"/api/*": {"origins": allowed_origins}},
+    supports_credentials=True,
+    allow_headers=["Content-Type", "Authorization"],
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+)
 
 # 4. Register the HawkAI Assistant Blueprint
 app.register_blueprint(hawk_ai_bp)
