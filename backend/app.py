@@ -7,15 +7,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # 1. Load .env explicitly BEFORE importing routes that depend on GROQ_API_KEY
+# Force override=True so any stale cached OS env vars do not win over the active .env file.
 backend_env = Path(__file__).resolve().parent / '.env'
 root_env = Path(__file__).resolve().parent.parent / '.env'
 
 if backend_env.exists():
-    load_dotenv(dotenv_path=backend_env)
+    load_dotenv(dotenv_path=backend_env, override=True)
 elif root_env.exists():
-    load_dotenv(dotenv_path=root_env)
+    load_dotenv(dotenv_path=root_env, override=True)
 else:
-    load_dotenv()
+    load_dotenv(override=True)
 
 from git import Repo
 from flask import Flask, request, jsonify, send_from_directory

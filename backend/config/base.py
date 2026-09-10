@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     REPORT_FOLDER: str = "backend/generated_reports"
 
     # Groq AI Integration
-    GROQ_API_KEY: str = "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"
+    GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GROQ_MODEL_CASCADE: list = [
         "llama-3.3-70b-versatile",

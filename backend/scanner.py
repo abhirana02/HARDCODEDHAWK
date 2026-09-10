@@ -245,9 +245,9 @@ def scan_directory(repo_path):
 # ------------------------------------------------------------------
 def validate_finding_with_groq(finding, api_key):
     """Ask Groq if a detected secret is real or a placeholder."""
-    if not api_key or "YOUR" in api_key.upper():
+    if not api_key or "YOUR" in api_key.upper() or "gsk_" not in api_key:
         finding["ai_confidence"] = 50
-        finding["ai_verdict"] = "Not validated (no API key)"
+        finding["ai_verdict"] = "Not validated (no valid API key)"
         return finding
 
     prompt = f"""
@@ -396,8 +396,8 @@ def run_full_scan(repo_path):
 def generate_ai_summary(findings, hygiene, skipped_files=None):
     """Your existing function, but now includes vulnerability counts."""
     api_key = getattr(settings, "GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
-    if not api_key or "YOUR" in api_key.upper():
-        return "AI Insights (Offline Mode): GROQ_API_KEY missing."
+    if not api_key or "YOUR" in api_key.upper() or "gsk_" not in api_key:
+        return "AI Insights (Offline Mode): No valid GROQ_API_KEY set in backend/.env."
 
     skipped_count = len(skipped_files) if skipped_files else 0
     total_findings = len(findings)

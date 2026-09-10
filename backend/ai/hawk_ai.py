@@ -6,7 +6,20 @@ try:
 except ImportError:
     from config.base import settings
 
-client = Groq(api_key=settings.GROQ_API_KEY)
+
+def get_groq_client():
+    api_key = (os.getenv("GROQ_API_KEY") or getattr(settings, "GROQ_API_KEY", "") or "").strip()
+    if not api_key or "gsk_" not in api_key:
+        raise ValueError("No valid GROQ_API_KEY available. AI features are disabled in offline mode.")
+    return Groq(api_key=api_key)
+
+
+client = None
+try:
+    client = get_groq_client()
+except Exception:
+    client = None
+
 
 def safe_groq_completion(messages, temperature=0.3, max_tokens=750):
     model_cascade = getattr(
@@ -20,10 +33,15 @@ def safe_groq_completion(messages, temperature=0.3, max_tokens=750):
     )
     
     last_error = None
-    
+    api_key = (os.getenv("GROQ_API_KEY") or getattr(settings, "GROQ_API_KEY", "") or "").strip()
+    if not api_key or "gsk_" not in api_key:
+        raise ValueError("AI Insights (Offline Mode): No valid GROQ_API_KEY set in backend/.env.")
+
+    groq_client = client or get_groq_client()
+
     for model_name in model_cascade:
         try:
-            completion = client.chat.completions.create(
+            completion = groq_client.chat.completions.create(
                 model=model_name,
                 messages=messages,
                 temperature=temperature,
